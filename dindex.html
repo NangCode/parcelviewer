@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Parcel Viewer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/ol@v7.4.0/ol.css"
+    />
+    <link rel="stylesheet" href="dcss/dstyle.css" />
+  </head>
+  <body>
+    <!-- Header and UI -->
+    <header class="hero">
+      <div class="logo">
+        <img src="/homepage/nationwide-parcel-data-2.svg" alt="Logo" />
+        <h1 class="nbrand">PARCEL VIEWER</h1>
+      </div>
+      <nav class="nav-buttons button">
+        <a href="index.html" class="button">Home</a>
+        <button id="toggle-basemap">Base Map</button>
+        <button id="toggle-layer">Layers</button>
+        <div class="tool-group">
+          <button id="parcel-search-btn" title="Search parcel">Search</button>
+          <button id="measure-tool-btn" title="Measure">Tools</button>
+          <button id="select-tool-btn" title="Select parcel">Select</button>
+          <button id="clear-all-btn" title="Clear All">Clear All</button>
+        </div>
+        <button id="help-btn">Help</button>
+      </nav>
+    </header>
+
+    <!-- Popups and Info -->
+    <div id="basemap-popup" class="popup hidden">
+      <strong>Base Map</strong><br />
+      <label
+        ><input type="radio" name="basemap" value="OpenStreetMap" checked />
+        OpenStreetMap</label
+      ><br />
+      <label
+        ><input type="radio" name="basemap" value="GoogleRoadmap" />
+        Roadmap</label
+      ><br />
+      <label
+        ><input type="radio" name="basemap" value="GoogleTerrain" />
+        Terrain</label
+      ><br />
+      <label
+        ><input type="radio" name="basemap" value="GoogleSatellite" />
+        Satellite</label
+      ><br />
+      <label
+        ><input type="radio" name="basemap" value="GoogleHybrid" />
+        Hybrid</label
+      >
+    </div>
+
+    <div id="layer-popup" class="popup hidden">
+      <strong>Layer Visibility</strong>
+      <div id="layer-controls"></div>
+    </div>
+
+    <div id="search-box" class="search-popup hidden">
+      <input
+        type="text"
+        id="parcel-search-input"
+        placeholder="Enter ID_Parcel"
+      />
+      <button id="search-btn-inner">Go</button>
+    </div>
+
+    <div id="measure-popup" class="measure-popup hidden">
+      <h3>Tools</h3>
+      <div>
+        <label
+          ><input type="radio" name="measure-type" value="length" checked />
+          Length</label
+        >
+        <label
+          ><input type="radio" name="measure-type" value="area" /> Area</label
+        >
+      </div>
+      <div>
+        <label for="unit-select">Unit:</label>
+        <select id="unit-select">
+          <option value="meters">Meters</option>
+          <option value="kilometers">Kilometers</option>
+          <option value="feet">Feet</option>
+          <option value="miles">Miles</option>
+        </select>
+      </div>
+      <button id="clear-measure-btn">Clear Measurement</button>
+      <div id="measure-result"></div>
+      <hr />
+      <button id="pin-tool-popup-btn">Toggle Pin Tool</button>
+      <div
+        id="share-pin-link"
+        title="Click to copy link"
+        class="share-pin-link hidden"
+      >
+        Share Pin Link: <span id="pin-link-text"></span>
+      </div>
+    </div>
+
+    <!-- Floating Parcel Information Button -->
+    <button id="parcel-info-btn" class="button" title="Parcel Info">
+      Parcel Information
+    </button>
+
+    <div id="feature-info" class="info-box hidden">
+      <h3>Detail Information</h3>
+      <ul id="feature-info-list"></ul>
+    </div>
+
+    <!-- Map & Controls -->
+    <div id="map" class="map-container"></div>
+    <div id="coords" class="coords-display"></div>
+    <div class="map-tools button">
+      <button id="zoom-in" title="Zoom in">+</button>
+      <button id="zoom-out" title="Zoom out">−</button>
+      <button id="locate" title="live location">📍</button>
+    </div>
+    <div id="map-controls" class="map-controls">
+      <div id="mouse-position"></div>
+
+      <div id="help-modal" class="modal-hidden">
+        <div class="modal-content">
+          <span id="help-close" class="modal-close">&times;</span>
+          <h2>Notice</h2>
+          <p>
+            The Google basemap does not offer the same level of spatial accuracy
+            as the displayed parcel boundaries on the map.<br />
+            The data presented on this map was originally created and provided
+            by the respective website owner.<br />
+            All rights reserved.<br />
+            For further information, please contact me at:
+            <a href="https://t.me/DOMSAMNANG" target="_blank">Telegram</a>.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scripts (your JS, map code, etc.) -->
+    <script src="https://cdn.jsdelivr.net/npm/ol@v7.4.0/dist/ol.js"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD_sqVhz-8THDQLhUnSi_niLc8R60cM710&libraries=places&v=weekly"></script>
+    <script src="dsource/proj4js/proj4-src.js"></script>
+    <script src="djava/web.js"></script>
+  </body>
+</html>

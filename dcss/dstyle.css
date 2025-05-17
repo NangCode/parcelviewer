@@ -1,0 +1,307 @@
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Map and header styles */
+#map {
+  margin-top: -3px;
+  height: calc(100vh - 100px);
+  width: 100vw;
+  position: relative;
+  z-index: 0;
+}
+.hero {
+  height: 100px;
+  background: linear-gradient(to bottom, #2c3eeb, #ffffff);
+  opacity: 0.9;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 40px;
+  color: #222;
+  backdrop-filter: blur(2px);
+}
+.logo {
+  display: flex;
+  align-items: center;
+}
+.logo img {
+  width: 80px;
+  border-radius: 0%;
+  margin-right: 10px;
+}
+.nbrand {
+  font-family: "Cooper Black", serif;
+  font-size: 22px;
+  padding-left: 20px;
+  margin-top: 30px;
+}
+button,
+a.button {
+  font-family: "Kantumruy Pro", sans-serif;
+  font-size: 14px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  color: #222;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  text-decoration: none;
+  display: inline-block;
+}
+button:hover,
+a.button:hover {
+  background: rgba(255, 255, 255, 0.9);
+  transform: scale(1.05);
+}
+.tool-group {
+  display: inline-flex;
+  gap: 8px;
+  margin-left: 10px;
+  vertical-align: middle;
+}
+.map-container {
+  height: calc(100vh - 100px);
+  width: 100%;
+}
+.map-tools {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.map-controls {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  z-index: 9999;
+}
+#mouse-position {
+  position: absolute;
+  bottom: 5px;
+  left: 150px;
+  font-size: 12px;
+  font-family: "Kantumruy Pro", sans-serif;
+  color: rgb(0, 0, 0);
+  white-space: nowrap;
+  text-shadow: 0 0 3px rgba(255, 255, 255, 0.9),
+    0 0 5px rgba(255, 255, 255, 0.6);
+  background: none;
+  border: none;
+  padding: 4px 6px;
+}
+
+/* Popup styles (for all tool popups) */
+.popup,
+.search-popup,
+.measure-popup {
+  position: fixed !important;
+  min-width: 240px;
+  width: 260px;
+  min-height: 140px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1.5px solid #2c3eeb;
+  border-radius: 10px;
+  padding: 18px 20px 18px 20px;
+  z-index: 1100;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  font-family: Arial, sans-serif;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  backdrop-filter: blur(6px);
+}
+.popup strong,
+.popup h3 {
+  font-size: 18px;
+  margin-top: 0;
+  margin-bottom: 12px;
+  font-family: "Kantumruy Pro", sans-serif;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+}
+.popup label {
+  line-height: 35px;
+  display: block;
+  margin: 5px 0;
+  font-size: 14px;
+  cursor: pointer;
+}
+.popup input[type="radio"],
+.popup input[type="checkbox"] {
+  accent-color: #2c3eeb;
+  margin-right: 7px;
+}
+.popup input[type="text"],
+.popup select {
+  border-radius: 5px;
+  border: 1px solid #aaa;
+  padding: 6px 7px;
+  font-size: 14px;
+  margin-top: 3px;
+  width: 90%;
+}
+.popup button {
+  margin-top: 8px;
+  background: #2c3eeb;
+  color: #fff;
+  border-radius: 6px;
+  border: none;
+  font-weight: bold;
+  padding: 7px 14px;
+  font-family: "Kantumruy Pro", sans-serif;
+  font-size: 14px;
+}
+.popup button:hover {
+  background: #1a2288;
+}
+.share-pin-link {
+  margin-top: 8px;
+  padding: 7px 10px;
+  background: #f7f7fa;
+  border: 1px solid #aaa;
+  border-radius: 5px;
+  font-size: 14px;
+  color: #333;
+  cursor: pointer;
+  user-select: all;
+}
+
+/* All popups aligned from the top-right, overlapping each other if open at the same time */
+#basemap-popup,
+#layer-popup,
+#search-box,
+#measure-popup {
+  top: 150px; /* Directly below the 100px header */
+  right: 10px;
+  left: auto;
+  transform: none;
+}
+
+/* Info Box for Feature Info */
+.info-box {
+  position: fixed;
+  left: 40px;
+  top: 220px;
+  width: 330px;
+  max-height: 360px;
+  overflow-y: auto;
+  background-color: rgba(255, 255, 255, 0.95);
+  border-radius: 12px;
+  padding: 18px 22px;
+  font-family: Arial, sans-serif;
+  color: #111;
+  box-shadow: 0 0 10px rgba(44, 62, 235, 0.09);
+  z-index: 1002;
+  backdrop-filter: blur(5px);
+}
+.info-box h3 {
+  margin-top: 0;
+  font-weight: 700;
+  font-size: 18px;
+}
+.info-box ul {
+  list-style-type: none;
+  padding-left: 0;
+}
+.info-box li {
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 500;
+}
+#layer-controls {
+  margin-top: 12px;
+}
+#layer-controls label {
+  margin-left: 4px;
+  margin-right: 14px;
+  font-weight: 500;
+}
+
+/* Hide OpenLayers default zoom controls */
+.ol-zoom {
+  display: none !important;
+}
+
+/* Hide any popup by adding .hidden */
+.hidden {
+  display: none !important;
+}
+
+#parcel-info-btn {
+  position: fixed;
+  left: 40px;
+  top: 150px;
+  z-index: 1200;
+  /* All other styling comes from your .button class! */
+}
+/* Modal Overlay */
+#help-modal {
+  position: fixed;
+  z-index: 9999;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(30, 30, 40, 0.08); /* Slight dim effect */
+  backdrop-filter: blur(2px); /* Chrome, Safari */
+  -webkit-backdrop-filter: blur(2px);
+  pointer-events: auto;
+}
+
+#help-modal.modal-hidden {
+  display: none;
+}
+
+/* Modal Box */
+.modal-content {
+  background: #fff;
+  padding: 2rem 2.5rem;
+  border-radius: 16px;
+  box-shadow: 0 2px 40px rgba(0, 0, 0, 0.18);
+  max-width: 400px;
+  width: 90vw;
+  text-align: center;
+  position: relative;
+}
+
+/* Close X */
+.modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  font-size: 2rem;
+  color: #888;
+  cursor: pointer;
+}
+
+.modal-close:hover {
+  color: #333;
+}
+
+/* Blur only the map when modal is open */
+#map.blur {
+  filter: blur(5px) brightness(0.93);
+  transition: filter 0.3s;
+  pointer-events: none;
+  user-select: none;
+}

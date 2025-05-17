@@ -1,0 +1,277 @@
+@import url("https://fonts.cdnfonts.com/css/cooper-black");
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.moul-regular {
+  font-family: "Moul", serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  scroll-behavior: smooth;
+  overflow-x: hidden;
+}
+
+body {
+  font-family: "Roboto", sans-serif;
+  color: #000;
+  outline: 1px solid red; /* Debug */
+}
+
+section {
+  width: 100%;
+  min-height: 100vh;
+  padding: 40px 0;
+  position: relative;
+  outline: 1px solid blue; /* Debug */
+}
+
+/* Hero Section */
+.hero {
+  height: 100vh;
+  background: linear-gradient(
+      to bottom,
+      rgba(0, 0, 255, 0.6),
+      rgba(255, 255, 255, 0.6)
+    ),
+    url("/homepage/ministry.webp") no-repeat center center/cover;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 20px 40px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+}
+
+.logo img {
+  width: 80px;
+  border-radius: 0%;
+  margin-right: 10px;
+}
+
+.ghome {
+  font-size: 14px;
+}
+
+.ghome a {
+  text-decoration: none;
+  margin-left: 20px;
+  color: #000;
+  font-weight: bold;
+}
+
+.content {
+  max-width: 700px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-left: 20px;
+  padding-bottom: 0%;
+}
+
+.content h1 {
+  font-family: "Cooper Black", serif;
+  font-size: 15rem;
+  color: rgba(0, 0, 0, 0.7);
+  text-align: left;
+  align-self: flex-start;
+}
+
+.content h2 {
+  font-family: "Cooper Black", serif;
+  font-size: 5rem;
+  color: rgba(41, 63, 146, 0.7);
+}
+
+.text-block {
+  font-family: "Cooper Black", serif;
+}
+
+.logo h3 {
+  margin-left: 15px;
+  font-family: "Cooper Black", serif;
+  font-size: 22px;
+}
+
+.button-container {
+  margin-top: 5rem;
+  margin-left: 200px;
+  display: inline-block;
+  background: rgba(41, 63, 146, 0.7);
+  padding: 5px 10px;
+  border-radius: 8px;
+  border: 1px solid #000;
+  backdrop-filter: blur(5px);
+  width: fit-content;
+}
+
+#buttonparcel {
+  font-family: "Cooper Black", serif;
+  font-size: 1.2rem;
+  color: rgba(0, 0, 0, 0.7);
+  text-decoration: none;
+  display: inline-block;
+  padding: 4px 10px;
+  background: transparent;
+  transition: all 0.3s ease;
+}
+
+#buttonparcel:hover {
+  color: #461f1f;
+  background-color: rgba(41, 63, 146, 0.7);
+  border-radius: 6px;
+  padding: 5px 12px;
+}
+
+@keyframes float-h1 {
+  0% {
+    transform: translateY(-20px);
+  }
+  50% {
+    transform: translateY(60px);
+  }
+  100% {
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes float-h2 {
+  0% {
+    transform: translateY(10px);
+  }
+  50% {
+    transform: translateY(-60px);
+  }
+  100% {
+    transform: translateY(10px);
+  }
+}
+
+.text-block h1 {
+  animation: float-h1 10s ease-in-out infinite;
+  position: relative;
+  z-index: 2;
+}
+
+.text-block h2 {
+  animation: float-h2 10s ease-in-out infinite;
+  position: relative;
+  z-index: 1;
+}
+/* profile */
+
+.profile {
+  height: 100vh;
+  background: linear-gradient(
+      to top,
+      rgba(0, 0, 255, 0.6),
+      rgba(255, 255, 255, 0.6)
+    ),
+    url("contourback.png") no-repeat center center/cover;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 20px 40px;
+}
+.my-profile {
+  width: 200px; /* Adjust width as needed */
+  margin: auto;
+  margin-top: 0;
+  justify-content: center; /* center horizontally */
+  align-items: flex-start;
+  text-align: center;
+}
+
+.my-profile img {
+  width: 80%;
+  height: auto;
+  border-radius: 20px; /* Rounded corners */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Optional: subtle shadow */
+}
+
+.my-profile .name-kh {
+  font-family: "Moul", serif;
+  font-size: 20px;
+  margin-top: 10px;
+}
+.abme {
+  font-family: "Kantumruy Pro", sans-serif;
+  font-weight: 700;
+  font-size: 26px;
+  margin-top: 10px;
+  padding-bottom: 10px;
+}
+
+.my-profile .name-en {
+  font-weight: bold;
+  font-size: 16px;
+  color: #5d5757;
+  font-family: "Cooper Black", serif;
+}
+.oc-dot::before {
+  content: "•"; /* Adds the bullet (red dot) */
+  color: #48cae4; /* Sets the color to red */
+  font-size: 50px; /* Adjusts the size of the dot */
+  margin-right: 10px; /* Adds space between the dot and the text */
+  vertical-align: -12px;
+}
+.doc-dot::before {
+  content: "•"; /* Adds the bullet (red dot) */
+  color: #0077b6; /* Sets the color to red */
+  font-size: 50px; /* Adjusts the size of the dot */
+  margin-right: 10px; /* Adds space between the dot and the text */
+  vertical-align: -12px;
+}
+.boc-dot::before {
+  content: "•"; /* Adds the bullet (red dot) */
+  color: #03045e; /* Sets the color to red */
+  font-size: 50px; /* Adjusts the size of the dot */
+  margin-right: 10px; /* Adds space between the dot and the text */
+  vertical-align: -12px;
+}
+.reason {
+  margin-bottom: 30%;
+  padding-left: 20%;
+  padding-right: 20%;
+  margin-top: 0px;
+  justify-content: left; /* center horizontally */
+  align-items: flex-start;
+  text-align: left;
+  line-height: 30px;
+}
+.reason1 {
+  font-size: 22px;
+  font-family: "Kantumruy Pro", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 700;
+  font-style: normal;
+  padding-top: 15px;
+  padding-bottom: 15px;
+}
+.answer {
+  font-size: 20px;
+  font-family: "Kantumruy Pro", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 300;
+  font-style: normal;
+}
+.date {
+  padding-left: 5%;
+}
