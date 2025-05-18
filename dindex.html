@@ -62,17 +62,42 @@
     </div>
 
     <div id="search-box" class="search-popup hidden">
-      <input
-        type="text"
-        id="parcel-search-input"
-        placeholder="Enter ID_Parcel"
-      />
-      <button id="search-btn-inner">Go</button>
+      <!-- Parcel ID Search -->
+      <div class="search-section">
+        <label for="parcel-search-input" class="search-label"
+          >Search Parcel by ID_Parcel:</label
+        >
+        <input
+          type="text"
+          id="parcel-search-input"
+          placeholder="Enter ID_Parcel"
+        />
+        <button id="search-btn-inner">Search Parcel ID</button>
+      </div>
+      <hr class="search-divider" />
+      <!-- Place Search -->
+      <div class="search-section">
+        <label for="google-place-input" class="search-label"
+          >Search Place</label
+        >
+        <input
+          type="text"
+          id="google-place-input"
+          placeholder="Enter a place name"
+          autocomplete="off"
+        />
+        <button id="google-place-search-btn" title="Search a place via Google">
+          Search Place Name
+        </button>
+        <div id="google-places-result"></div>
+      </div>
     </div>
 
+    <!-- Tool Panel (Measure, Pin, KML, Print) -->
     <div id="measure-popup" class="measure-popup hidden">
       <h3>Tools</h3>
       <div>
+        <p>Measure Tool</p>
         <label
           ><input type="radio" name="measure-type" value="length" checked />
           Length</label
@@ -92,8 +117,9 @@
       </div>
       <button id="clear-measure-btn">Clear Measurement</button>
       <div id="measure-result"></div>
-      <hr />
-      <button id="pin-tool-popup-btn">Toggle Pin Tool</button>
+      <hr class="tool-divider" />
+      <p>Toggle Pin Tool</p>
+      <button id="pin-tool-popup-btn">Click to pin</button>
       <div
         id="share-pin-link"
         title="Click to copy link"
@@ -101,20 +127,38 @@
       >
         Share Pin Link: <span id="pin-link-text"></span>
       </div>
+      <hr class="tool-divider" />
+      <p>Importing Tool</p>
+      <label class="kml-label" for="kml-file-input"></label>
+      <input
+        type="file"
+        id="kml-file-input"
+        accept=".kml"
+        style="margin-bottom: 7px"
+      />
+      <button id="clear-kml-btn" style="margin-bottom: 7px">Clear KML</button>
+      <hr class="tool-divider" />
+      <p>Printing Tool</p>
+      <button id="print-tool-btn" title="Print the map">Print</button>
     </div>
+    <div id="kml-status" class="kml-status"></div>
 
-    <!-- Floating Parcel Information Button -->
     <button id="parcel-info-btn" class="button" title="Parcel Info">
       Parcel Information
     </button>
+
+    <!-- Print Content Only -->
+    <div id="map" class="map-container"></div>
+    <div id="print-note">
+      Note: All data presented on this website is intended solely for case study
+      purposes.
+    </div>
 
     <div id="feature-info" class="info-box hidden">
       <h3>Detail Information</h3>
       <ul id="feature-info-list"></ul>
     </div>
 
-    <!-- Map & Controls -->
-    <div id="map" class="map-container"></div>
     <div id="coords" class="coords-display"></div>
     <div class="map-tools button">
       <button id="zoom-in" title="Zoom in">+</button>
@@ -123,7 +167,6 @@
     </div>
     <div id="map-controls" class="map-controls">
       <div id="mouse-position"></div>
-
       <div id="help-modal" class="modal-hidden">
         <div class="modal-content">
           <span id="help-close" class="modal-close">&times;</span>
@@ -143,7 +186,7 @@
 
     <!-- Scripts (your JS, map code, etc.) -->
     <script src="https://cdn.jsdelivr.net/npm/ol@v7.4.0/dist/ol.js"></script>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD_sqVhz-8THDQLhUnSi_niLc8R60cM710&libraries=places&v=weekly"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCC_SyLRwvCUHnphmNS0jhGBzzYDHXIJHU&libraries=places&v=weekly"></script>
     <script src="dsource/proj4js/proj4-src.js"></script>
     <script src="djava/web.js"></script>
   </body>

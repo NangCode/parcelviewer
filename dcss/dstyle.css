@@ -5,43 +5,47 @@ body {
   height: 100vh;
   width: 100vw;
   overflow: hidden;
-  position: relative;
 }
-
-/* Map and header styles */
-#map {
-  margin-top: -3px;
-  height: calc(100vh - 100px);
-  width: 100vw;
-  position: relative;
-  z-index: 0;
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 .hero {
   height: 100px;
-  background: linear-gradient(to bottom, #2c3eeb, #ffffff);
-  opacity: 0.9;
+  background: linear-gradient(to right, #496a9a 0%, #7e90a5 35%, #b8e994 100%);
+  opacity: 0.96;
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 10px 40px;
-  color: #222;
+  color: #223046;
   backdrop-filter: blur(2px);
+  overflow: hidden;
 }
 .logo {
   display: flex;
   align-items: center;
 }
 .logo img {
-  width: 80px;
-  border-radius: 0%;
+  width: 60px;
+  max-height: 80px;
   margin-right: 10px;
 }
 .nbrand {
   font-family: "Cooper Black", serif;
   font-size: 22px;
   padding-left: 20px;
-  margin-top: 30px;
+  /* No margin-top */
 }
+#map {
+  height: calc(100vh - 100px);
+  width: 100vw;
+  margin-top: 0;
+  position: relative;
+  z-index: 0;
+}
+
 button,
 a.button {
   font-family: "Kantumruy Pro", sans-serif;
@@ -188,7 +192,7 @@ a.button:hover {
 #layer-popup,
 #search-box,
 #measure-popup {
-  top: 150px; /* Directly below the 100px header */
+  top: 150px;
   right: 10px;
   left: auto;
   transform: none;
@@ -197,13 +201,14 @@ a.button:hover {
 /* Info Box for Feature Info */
 .info-box {
   position: fixed;
-  left: 40px;
-  top: 220px;
-  width: 330px;
+  left: 10px;
+  top: 200px;
+  width: 220px;
   max-height: 360px;
   overflow-y: auto;
   background-color: rgba(255, 255, 255, 0.95);
-  border-radius: 12px;
+  border: 1.5px solid #2c3eeb;
+  border-radius: 15px 15px 15px 15px; /* Use your preferred values */
   padding: 18px 22px;
   font-family: Arial, sans-serif;
   color: #111;
@@ -211,6 +216,7 @@ a.button:hover {
   z-index: 1002;
   backdrop-filter: blur(5px);
 }
+
 .info-box h3 {
   margin-top: 0;
   font-weight: 700;
@@ -249,9 +255,7 @@ a.button:hover {
   left: 40px;
   top: 150px;
   z-index: 1200;
-  /* All other styling comes from your .button class! */
 }
-/* Modal Overlay */
 #help-modal {
   position: fixed;
   z-index: 9999;
@@ -262,8 +266,8 @@ a.button:hover {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(30, 30, 40, 0.08); /* Slight dim effect */
-  backdrop-filter: blur(2px); /* Chrome, Safari */
+  background: rgba(30, 30, 40, 0.08);
+  backdrop-filter: blur(2px);
   -webkit-backdrop-filter: blur(2px);
   pointer-events: auto;
 }
@@ -272,7 +276,6 @@ a.button:hover {
   display: none;
 }
 
-/* Modal Box */
 .modal-content {
   background: #fff;
   padding: 2rem 2.5rem;
@@ -283,8 +286,6 @@ a.button:hover {
   text-align: center;
   position: relative;
 }
-
-/* Close X */
 .modal-close {
   position: absolute;
   top: 1rem;
@@ -293,15 +294,205 @@ a.button:hover {
   color: #888;
   cursor: pointer;
 }
-
 .modal-close:hover {
   color: #333;
 }
-
-/* Blur only the map when modal is open */
 #map.blur {
   filter: blur(5px) brightness(0.93);
   transition: filter 0.3s;
   pointer-events: none;
   user-select: none;
+}
+
+.search-section {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-bottom: 10px;
+}
+.search-label {
+  font-size: 14px;
+  font-weight: bold;
+  color: #2c3eeb;
+  margin-bottom: 2px;
+  letter-spacing: 0.7px;
+}
+.search-divider {
+  margin: 14px 0 8px 0;
+  border: none;
+  border-top: 1px solid #b8d4fa;
+}
+#google-places-result {
+  max-height: 180px;
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid #b8d4fa;
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(44, 62, 235, 0.05);
+  margin-top: 8px;
+  position: relative;
+  z-index: 1500;
+}
+.google-place-item {
+  font-size: 15px;
+  color: #23344a;
+  background: #fff;
+  cursor: pointer;
+  padding: 7px 10px;
+  border-bottom: 1px solid #e8e8e8;
+  transition: background 0.15s;
+}
+.google-place-item:last-child {
+  border-bottom: none;
+}
+.google-place-item:hover {
+  background: #e7edfa;
+}
+
+.kml-label {
+  font-size: 14px;
+  font-weight: bold;
+  color: #2c3eeb;
+  margin-top: 12px;
+  margin-bottom: 3px;
+  display: block;
+}
+.kml-status {
+  font-size: 13px;
+  margin-top: 3px;
+  margin-bottom: 5px;
+  min-height: 18px;
+}
+.tool-divider {
+  border: none;
+  border-top: 2px solid #2c3eeb;
+  margin: 16px 0 12px 0;
+}
+
+/* printing */
+@page {
+  margin-top: 0.5cm;
+  margin-left: 0.5cm;
+  margin-right: 0.5cm;
+  margin-bottom: 0.5cm;
+}
+
+@media print {
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+  /* Hide only unnecessary navigation, popups, and buttons */
+  nav,
+  .nav-buttons,
+  .tool-group,
+  .map-tools,
+  #help-btn,
+  #parcel-info-btn,
+  #measure-popup,
+  #basemap-popup,
+  #layer-popup,
+  #search-box,
+  #map-controls,
+  #coords,
+  #kml-status {
+    display: none !important;
+  }
+  .button,
+  button,
+  input,
+  select,
+  label,
+  .modal-content,
+  .popup {
+    display: none !important;
+  }
+  /* Show header, logo, and website name at the top */
+  header.hero {
+    display: block !important;
+    background: #fff !important;
+    color: #000 !important;
+    box-shadow: none !important;
+    text-align: center !important;
+    padding: 0 !important;
+    margin-bottom: 0 !important;
+    border-bottom: 1px solid #bbb !important;
+  }
+  .logo img {
+    display: inline-block !important;
+    max-height: 40px !important;
+    vertical-align: middle !important;
+    margin-right: 0.7em !important;
+  }
+  .nbrand {
+    display: inline-block !important;
+    font-size: 1.7em !important;
+    font-weight: bold !important;
+    vertical-align: middle !important;
+    color: #222 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    letter-spacing: 1.5px !important;
+  }
+  #map {
+    margin-top: -40px !important;
+    margin-bottom: 0 !important;
+    width: 99% !important;
+    height: 25.2cm !important;
+    position: relative !important;
+    top: 0 !important;
+    right: 0 !important;
+    border: 2px solid rgb(4, 29, 28) !important;
+    box-shadow: none !important;
+  }
+
+  #feature-info {
+    display: block !important;
+    position: absolute !important;
+    top: 33em !important;
+    left: 0.5em !important;
+    background: #fff !important;
+    color: #000 !important;
+    box-shadow: none !important;
+    z-index: 999 !important;
+    font-size: 1em !important;
+    max-width: 25vw !important; /* Reduce width */
+    min-width: 150px !important;
+    max-height: 60vh !important; /* Add max-height for long content */
+    overflow-y: auto !important; /* Scrollbar if too tall */
+    word-break: break-word !important; /* Force wrap long words/URLs */
+    padding: 1em !important;
+    border: 1px solid #aaa !important;
+  }
+  body,
+  html {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* HIDE note on screen */
+  #print-note {
+    display: none;
+  }
+
+  /* SHOW note on print, and style it */
+
+  #print-note {
+    display: block !important;
+    position: fixed !important;
+    bottom: 5px !important; /* Same as your @page margin-bottom */
+    left: 0.5cm !important; /* Align with your page margin-left */
+    right: 0.5cm !important; /* Align with your page margin-right */
+    width: auto !important;
+    margin: 0 !important;
+    padding: 0.8em 1em !important;
+    font-size: 1.1em !important;
+    color: #444 !important;
+    background: #f7f7f7 !important;
+    border: 1px dashed #bbb !important;
+    border-radius: 6px !important;
+    text-align: left !important;
+    font-style: italic !important;
+    z-index: 9999 !important;
+  }
 }

@@ -37,9 +37,10 @@ section {
 .hero {
   height: 100vh;
   background: linear-gradient(
-      to bottom,
-      rgba(0, 0, 255, 0.6),
-      rgba(255, 255, 255, 0.6)
+      to right,
+      #496a9a 0%,
+      #7e90a55b 35%,
+      #b7e99488 100%
     ),
     url("/homepage/ministry.webp") no-repeat center center/cover;
   display: flex;
@@ -178,18 +179,26 @@ section {
 /* profile */
 
 .profile {
-  height: 100vh;
+  min-height: 100vh; /* Always at least full screen */
+  height: auto; /* But can grow with content */
   background: linear-gradient(
-      to top,
-      rgba(0, 0, 255, 0.6),
-      rgba(255, 255, 255, 0.6)
+      to right,
+      #496a9a 0%,
+      #7e90a55b 35%,
+      #b7e99488 100%
     ),
     url("contourback.png") no-repeat center center/cover;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: flex-start; /* changed from space-between */
   padding: 20px 40px;
 }
+@media (max-width: 600px) {
+  .profile {
+    padding: 8px 2vw;
+  }
+}
+
 .my-profile {
   width: 200px; /* Adjust width as needed */
   margin: auto;
@@ -256,6 +265,21 @@ section {
   text-align: left;
   line-height: 30px;
 }
+
+@media (max-width: 900px) {
+  .reason {
+    padding-left: 8%;
+    padding-right: 8%;
+  }
+}
+@media (max-width: 600px) {
+  .reason {
+    padding-left: 3%;
+    padding-right: 3%;
+    font-size: 16px;
+  }
+}
+
 .reason1 {
   font-size: 22px;
   font-family: "Kantumruy Pro", sans-serif;

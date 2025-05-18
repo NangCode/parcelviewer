@@ -2,7 +2,7 @@ window.onload = init;
 
 function init() {
   // Google Maps API key
-  const apiKey = "AIzaSyD_sqVhz-8THDQLhUnSi_niLc8R60cM710";
+  const apiKey = "AIzaSyCC_SyLRwvCUHnphmNS0jhGBzzYDHXIJHU";
 
   // ======= Basemaps =======
   const baseLayers = {
@@ -115,7 +115,7 @@ function init() {
     layerPopup.classList.add("hidden");
     searchBox.classList.add("hidden");
     measurePopup.classList.add("hidden");
-    infoBox.classList.add("hidden");
+    // infoBox.classList.add("hidden");
   });
 
   document.getElementById("toggle-layer").addEventListener("click", () => {
@@ -123,13 +123,13 @@ function init() {
     basemapPopup.classList.add("hidden");
     searchBox.classList.add("hidden");
     measurePopup.classList.add("hidden");
-    infoBox.classList.add("hidden");
+    // infoBox.classList.add("hidden");
   });
 
   document.getElementById("parcel-search-btn").addEventListener("click", () => {
     searchBox.classList.toggle("hidden");
     measurePopup.classList.add("hidden");
-    infoBox.classList.add("hidden");
+    // infoBox.classList.add("hidden");
     layerPopup.classList.add("hidden");
     basemapPopup.classList.add("hidden");
   });
@@ -145,7 +145,7 @@ function init() {
   document.getElementById("measure-tool-btn").addEventListener("click", () => {
     measurePopup.classList.toggle("hidden");
     searchBox.classList.add("hidden");
-    infoBox.classList.add("hidden");
+    // infoBox.classList.add("hidden");
     layerPopup.classList.add("hidden");
     basemapPopup.classList.add("hidden");
   });
@@ -314,7 +314,7 @@ function init() {
     if (select.getActive()) {
       measurePopup.classList.add("hidden");
       searchBox.classList.add("hidden");
-      infoBox.classList.add("hidden");
+      // infoBox.classList.add("hidden");
       layerPopup.classList.add("hidden");
       basemapPopup.classList.add("hidden");
     }
@@ -348,8 +348,11 @@ function init() {
   });
 
   // ======= Measure Tool =======
+  // ======= Measure Tool =======
   let draw;
   let snaps = [];
+  let measureActive = false;
+
   const measureSource = new ol.source.Vector();
   const measureLayer = new ol.layer.Vector({
     source: measureSource,
@@ -374,10 +377,6 @@ function init() {
     snaps = [];
     document.getElementById("measure-result").innerHTML = "";
   }
-
-  document
-    .getElementById("clear-measure-btn")
-    .addEventListener("click", clearMeasurement);
 
   function formatLength(line, unit) {
     const length = ol.sphere.getLength(line);
@@ -409,11 +408,13 @@ function init() {
 
     // Snapping: to all loaded geojson sources
     snaps = [];
-    snappingSources.forEach((source) => {
-      const snap = new ol.interaction.Snap({ source });
-      map.addInteraction(snap);
-      snaps.push(snap);
-    });
+    if (typeof snappingSources !== "undefined") {
+      snappingSources.forEach((source) => {
+        const snap = new ol.interaction.Snap({ source });
+        map.addInteraction(snap);
+        snaps.push(snap);
+      });
+    }
 
     draw.on("drawend", (e) => {
       const geom = e.feature.getGeometry();
@@ -426,15 +427,35 @@ function init() {
     });
   }
 
-  document.getElementsByName("measure-type").forEach((r) => {
-    r.addEventListener("change", addDrawInteraction);
+  // Measure Tool Toggle Button
+  document.getElementById("measure-tool-btn").addEventListener("click", () => {
+    measureActive = !measureActive;
+    if (measureActive) {
+      addDrawInteraction();
+      measurePopup.classList.remove("hidden");
+      searchBox.classList.add("hidden");
+      // infoBox.classList.add("hidden");
+      layerPopup.classList.add("hidden");
+      basemapPopup.classList.add("hidden");
+    } else {
+      clearMeasurement();
+      measurePopup.classList.add("hidden");
+    }
   });
+
+  // Only update draw interaction if tool is active
+  document.getElementsByName("measure-type").forEach((r) => {
+    r.addEventListener("change", () => {
+      if (measureActive) addDrawInteraction();
+    });
+  });
+  document.getElementById("unit-select").addEventListener("change", () => {
+    if (measureActive) addDrawInteraction();
+  });
+
   document
-    .getElementById("unit-select")
-    .addEventListener("change", addDrawInteraction);
-  document
-    .getElementById("measure-tool-btn")
-    .addEventListener("click", addDrawInteraction);
+    .getElementById("clear-measure-btn")
+    .addEventListener("click", clearMeasurement);
 
   // ======= Pin & Share Link Tool (ONLY IN MEASURE POPUP) =======
   const pinSource = new ol.source.Vector();
@@ -542,6 +563,21 @@ function init() {
   // ======= Clear All Tool =======
   document.getElementById("clear-all-btn").addEventListener("click", () => {
     clearMeasurement();
+    // Clear KML Layer if it exists
+    if (kmlLayer) {
+      map.removeLayer(kmlLayer);
+      kmlLayer = null;
+    }
+    // Clear KML file input (optional, if it exists)
+    // const kmlInput = document.getElementById("kml-file-input");
+    // if (kmlInput) kmlInput.value = "";
+    // Update KML status message
+    // const kmlStatus = document.getElementById("kml-status");
+    // if (kmlStatus) {
+    //   kmlStatus.textContent = "";
+    //   kmlStatus.style.color = "#999";
+    // }
+
     clearPin();
     removePinInteraction();
     pinToolActive = false;
@@ -582,5 +618,224 @@ function init() {
       helpModal.classList.add("modal-hidden");
       mapDiv.classList.remove("blur");
     }
+  });
+
+  // ======= Google Place Search (below Parcel ID search) =======
+  let googleAutocompleteService = new google.maps.places.AutocompleteService();
+  let googlePlacesService;
+  let gmapDiv = document.createElement("div");
+  document.body.appendChild(gmapDiv);
+  googlePlacesService = new google.maps.places.PlacesService(gmapDiv);
+
+  const googleInput = document.getElementById("google-place-input");
+  const resultDiv = document.getElementById("google-places-result");
+
+  // --- Autocomplete as you type ---
+  googleInput.addEventListener("input", function () {
+    const query = this.value.trim();
+    resultDiv.innerHTML = "";
+    if (!query) return;
+    googleAutocompleteService.getPlacePredictions(
+      { input: query },
+      (predictions, status) => {
+        if (
+          status !== google.maps.places.PlacesServiceStatus.OK ||
+          !predictions
+        ) {
+          resultDiv.innerHTML =
+            "<div style='color:red;padding:6px;'>No results found.</div>";
+          return;
+        }
+        resultDiv.innerHTML = "";
+        predictions.forEach((pred) => {
+          const div = document.createElement("div");
+          div.className = "google-place-item";
+          div.textContent = pred.description;
+          div.onclick = () => {
+            // Get place details by place_id
+            googlePlacesService.getDetails(
+              { placeId: pred.place_id },
+              (place, status) => {
+                if (
+                  status === google.maps.places.PlacesServiceStatus.OK &&
+                  place &&
+                  place.geometry
+                ) {
+                  const loc = place.geometry.location;
+                  const coord = ol.proj.fromLonLat([loc.lng(), loc.lat()]);
+                  map
+                    .getView()
+                    .animate({ center: coord, zoom: 17, duration: 1000 });
+                  // Optional: Place a marker at the found place
+                  const markerSource = new ol.source.Vector();
+                  const markerLayer = new ol.layer.Vector({
+                    source: markerSource,
+                    style: new ol.style.Style({
+                      image: new ol.style.Icon({
+                        src: "https://maps.gstatic.com/mapfiles/api-3/images/spotlight-poi-dotless2.png",
+                        scale: 1,
+                        anchor: [0.5, 1],
+                      }),
+                    }),
+                  });
+                  markerSource.clear();
+                  markerSource.addFeature(
+                    new ol.Feature(new ol.geom.Point(coord))
+                  );
+                  // Remove old place marker if exists
+                  if (window.__googlePlaceLayer)
+                    map.removeLayer(window.__googlePlaceLayer);
+                  window.__googlePlaceLayer = markerLayer;
+                  map.addLayer(markerLayer);
+
+                  resultDiv.innerHTML = "";
+                  document.getElementById("search-box").classList.add("hidden");
+                } else {
+                  alert("Could not get location details.");
+                }
+              }
+            );
+          };
+          resultDiv.appendChild(div);
+        });
+      }
+    );
+  });
+
+  // --- Optionally: let the "Search Place" button do the same thing as Enter key (not required, but for fallback/mobile)
+  document
+    .getElementById("google-place-search-btn")
+    .addEventListener("click", function () {
+      const query = googleInput.value.trim();
+      if (!query) {
+        alert("Please enter a place name.");
+        return;
+      }
+      // Manually trigger the input event to show suggestions
+      googleInput.dispatchEvent(new Event("input"));
+    });
+
+  // --- KML Import Tool ---
+  let kmlLayer = null;
+  document
+    .getElementById("kml-file-input")
+    .addEventListener("change", function (e) {
+      const file = e.target.files[0];
+      const statusDiv = document.getElementById("kml-status");
+      if (!file) {
+        statusDiv.textContent = "";
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = function (event) {
+        const kmlText = event.target.result;
+        if (kmlLayer) map.removeLayer(kmlLayer);
+
+        const format = new ol.format.KML();
+        const features = format.readFeatures(kmlText, {
+          dataProjection: "EPSG:4326",
+          featureProjection: map.getView().getProjection(),
+        });
+
+        if (!features.length) {
+          statusDiv.textContent = "No features found in KML.";
+          statusDiv.style.color = "#c0392b";
+          return;
+        }
+
+        const vectorSource = new ol.source.Vector({ features });
+        kmlLayer = new ol.layer.Vector({
+          source: vectorSource,
+          zIndex: 1000,
+          style: function (feature) {
+            const type = feature.getGeometry().getType();
+            if (type === "Point" || type === "MultiPoint") {
+              return new ol.style.Style({
+                image: new ol.style.Circle({
+                  radius: 10,
+                  fill: new ol.style.Fill({ color: "#00FF00" }),
+                  stroke: new ol.style.Stroke({ color: "#333", width: 3 }),
+                }),
+              });
+            }
+            if (type === "LineString" || type === "MultiLineString") {
+              return new ol.style.Style({
+                stroke: new ol.style.Stroke({
+                  color: "#FF0000",
+                  width: 4,
+                }),
+              });
+            }
+            if (type === "Polygon" || type === "MultiPolygon") {
+              return new ol.style.Style({
+                stroke: new ol.style.Stroke({
+                  color: "#0000FF",
+                  width: 3,
+                }),
+                fill: new ol.style.Fill({
+                  color: "rgba(0,0,255,0.2)",
+                }),
+              });
+            }
+            return null;
+          },
+        });
+
+        map.addLayer(kmlLayer);
+
+        map.getView().fit(vectorSource.getExtent(), {
+          duration: 1000,
+          padding: [40, 40, 40, 40],
+          maxZoom: 18,
+        });
+
+        // statusDiv.textContent =
+        //   "KML loaded successfully! Features: " + features.length;
+        // statusDiv.style.color = "#00aa40";
+      };
+      reader.onerror = function () {
+        statusDiv.textContent = "Failed to read KML file.";
+        statusDiv.style.color = "#c0392b";
+      };
+      reader.readAsText(file);
+    });
+  document
+    .getElementById("clear-kml-btn")
+    .addEventListener("click", function () {
+      // Remove KML layer if it exists
+      if (kmlLayer) {
+        map.removeLayer(kmlLayer);
+        kmlLayer = null;
+      }
+      // Clear file input
+      // const fileInput = document.getElementById("kml-file-input");
+      // if (fileInput) fileInput.value = "";
+      // Update status
+      // const statusDiv = document.getElementById("kml-status");
+      // if (statusDiv) {
+      //   statusDiv.textContent = "";
+      //   statusDiv.style.color = "#999";
+      // }
+    });
+
+  // print
+
+  document.getElementById("print-tool-btn").addEventListener("click", () => {
+    // Make sure the parcel info is open if you want it printed
+    document.getElementById("feature-info").classList.remove("hidden");
+
+    // Add printing class
+    document.body.classList.add("printing");
+
+    // Force OpenLayers to repaint for print (replace 'map' with your OpenLayers map variable)
+    setTimeout(() => {
+      if (window.map && window.map.updateSize) {
+        window.map.updateSize();
+      }
+      window.print();
+      setTimeout(() => {
+        document.body.classList.remove("printing");
+      }, 500);
+    }, 200);
   });
 }
