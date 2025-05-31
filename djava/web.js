@@ -288,6 +288,7 @@ function init() {
   snappingSources.push(parcelWfsSource);
 
   // ======= Select Parcel Tool =======
+  // ======= Select Parcel Tool =======
   // === Declare selection-related containers ===
   const parcelSelectLayers = [];
   const selectionLayer = new ol.layer.Vector({
@@ -373,16 +374,6 @@ function init() {
     selectionLayer.getSource().clear();
     const feature = e.selected[0];
 
-<<<<<<< HEAD
-  document.getElementById("select-tool-btn").addEventListener("click", () => {
-    select.setActive(!select.getActive());
-    if (select.getActive()) {
-      measurePopup.classList.add("hidden");
-      searchBox.classList.add("hidden");
-      // infoBox.classList.add("hidden");
-      layerPopup.classList.add("hidden");
-      basemapPopup.classList.add("hidden");
-=======
     if (feature) {
       const geometry = feature.getGeometry();
       const properties = feature.getProperties();
@@ -405,7 +396,6 @@ function init() {
       selectionLayer.getSource().addFeature(feature.clone());
     } else {
       document.getElementById("feature-info").classList.add("hidden");
->>>>>>> f76d4a0 (add new code)
     }
   });
 
@@ -598,7 +588,6 @@ function init() {
     document.getElementById("measure-result").innerHTML = "";
   }
 
-<<<<<<< HEAD
   function formatLength(line, unit) {
     const length = ol.sphere.getLength(line);
     if (unit === "kilometers") return (length / 1000).toFixed(3) + " km";
@@ -615,9 +604,8 @@ function init() {
     return area.toFixed(2) + " m²";
   }
 
-=======
   // --- Add drawing interaction ---
->>>>>>> f76d4a0 (add new code)
+
   function addDrawInteraction() {
     // Don't clear previous features
     if (draw) {
@@ -638,12 +626,11 @@ function init() {
     });
     map.addInteraction(draw);
 
-<<<<<<< HEAD
     // Snapping: to all loaded geojson sources
     snaps = [];
-=======
+
     // Reapply snapping
->>>>>>> f76d4a0 (add new code)
+
     if (typeof snappingSources !== "undefined") {
       snappingSources.forEach((source) => {
         const snap = new ol.interaction.Snap({ source });
@@ -666,21 +653,19 @@ function init() {
     });
   }
 
-<<<<<<< HEAD
   // Measure Tool Toggle Button
-=======
+
   // --- Toggle measure tool button ---
->>>>>>> f76d4a0 (add new code)
+
   document.getElementById("measure-tool-btn").addEventListener("click", () => {
     measureActive = !measureActive;
     if (measureActive) {
       addDrawInteraction();
       measurePopup.classList.remove("hidden");
       searchBox.classList.add("hidden");
-<<<<<<< HEAD
+
       // infoBox.classList.add("hidden");
-=======
->>>>>>> f76d4a0 (add new code)
+
       layerPopup.classList.add("hidden");
       basemapPopup.classList.add("hidden");
     } else {
@@ -689,7 +674,6 @@ function init() {
     }
   });
 
-<<<<<<< HEAD
   // Only update draw interaction if tool is active
   document.getElementsByName("measure-type").forEach((r) => {
     r.addEventListener("change", () => {
@@ -700,7 +684,6 @@ function init() {
     if (measureActive) addDrawInteraction();
   });
 
-=======
   // --- Change listeners for unit + type ---
   document.getElementsByName("measure-type").forEach((r) => {
     r.addEventListener("change", () => {
@@ -712,7 +695,7 @@ function init() {
   });
 
   // --- Clear measure button ---
->>>>>>> f76d4a0 (add new code)
+
   document
     .getElementById("clear-measure-btn")
     .addEventListener("click", clearMeasurement);
