@@ -1,4 +1,5 @@
 window.onload = init;
+const projection = ol.proj.get("EPSG:3857");
 
 function init() {
   // Google Maps API key
@@ -56,6 +57,19 @@ function init() {
       projection: "EPSG:3857",
     }),
   });
+
+  // Create a basic popup div and overlay
+  const popup = document.createElement("div");
+  popup.className = "ol-popup";
+  document.body.appendChild(popup);
+
+  const popupOverlay = new ol.Overlay({
+    element: popup,
+    positioning: "bottom-center",
+    stopEvent: false,
+    offset: [0, -20],
+  });
+  map.addOverlay(popupOverlay);
 
   // --- Mouse Position ---
   const mousePositionControl = new ol.control.MousePosition({
@@ -161,154 +175,205 @@ function init() {
   });
 
   // ======= GeoJSON Layers with Visibility Controls =======
-  const geojsonFiles = [
-    {
-      url: "dsource/json/cad_parcel.geojson",
-      stroke: "#FF0000",
-      name: "Parcels",
-    },
-    {
-      url: "dsource/json/v_boun.geojson",
-      stroke: "#FF00FF",
-      name: "Boundaries",
-    },
+  // ======= WMS Layers with Workspace Checkboxes =======
+  const wmsWorkspaces = [
+    { name: "parcelws", title: "Land Parcels" },
+    { name: "boundaryws", title: "Administrative Boundaries" },
   ];
 
-  const geojsonLayers = [];
-  const snappingSources = [];
   const layerControls = document.getElementById("layer-controls");
 
-  geojsonFiles.forEach((file, index) => {
-    const vectorSource = new ol.source.Vector({
-      url: file.url,
-      format: new ol.format.GeoJSON(),
-    });
-    const layer = new ol.layer.Vector({
-      source: vectorSource,
-      style: (feature, resolution) => {
-        const showLabel = resolution <= 3;
-        return new ol.style.Style({
-          stroke: new ol.style.Stroke({
-            color: file.stroke,
-            width: 2,
-          }),
-          fill: new ol.style.Fill({ color: "rgba(0,0,0,0)" }),
-          text:
-            showLabel && feature.get("ID_Parcel")
-              ? new ol.style.Text({
-                  font: "12px Calibri,sans-serif",
-                  fill: new ol.style.Fill({ color: "#000" }),
-                  stroke: new ol.style.Stroke({ color: "#fff", width: 3 }),
-                  text: String(feature.get("ID_Parcel")),
-                  overflow: true,
-                })
-              : undefined,
-        });
-      },
-      visible: true,
-    });
-    layer.setZIndex(10 + index);
-    map.addLayer(layer);
-    geojsonLayers.push(layer);
+  // Pre-create wrappers in the desired order
+  const workspaceWrappers = {};
 
-    // Snapping source: wait for feature load
-    vectorSource.on("change", function () {
-      if (vectorSource.getState() === "ready") {
-        if (!snappingSources.includes(vectorSource)) {
-          snappingSources.push(vectorSource);
-        }
-      }
-    });
-
-    // --- Add checkbox control with text after checkbox and note under checkbox ---
+  wmsWorkspaces.forEach(({ name, title }, wsIndex) => {
     const wrapper = document.createElement("div");
     wrapper.style.marginBottom = "0.75em";
+
     const checkbox = document.createElement("input");
     checkbox.type = "checkbox";
-    checkbox.id = `geojson-toggle-${index}`;
+    checkbox.id = `workspace-toggle-${wsIndex}`;
     checkbox.checked = true;
 
     const label = document.createElement("label");
     label.htmlFor = checkbox.id;
     label.style.marginLeft = "0.25em";
-    label.textContent = file.name;
-
-    // Note under checkbox
-    const note = document.createElement("div");
-    note.style.fontSize = "0.92em";
-    note.style.color = "#666";
-    note.style.marginLeft = "1.5em";
-    note.textContent = file.note;
+    label.textContent = title;
 
     wrapper.appendChild(checkbox);
     wrapper.appendChild(label);
-    wrapper.appendChild(note);
-
     layerControls.appendChild(wrapper);
 
-    checkbox.addEventListener("change", () => {
-      layer.setVisible(checkbox.checked);
-    });
+    workspaceWrappers[name] = {
+      checkbox,
+      layers: [],
+    };
+
+    // Now fetch and fill in the layers
+    const capabilitiesUrl = `http://localhost:8080/geoserver/${name}/ows?service=WMS&request=GetCapabilities`;
+
+    fetch(capabilitiesUrl)
+      .then((res) => res.text())
+      .then((xmlText) => {
+        const parser = new ol.format.WMSCapabilities();
+        const result = parser.read(xmlText);
+        const layers = result.Capability.Layer.Layer;
+
+        layers.forEach((layerInfo, i) => {
+          const layerName = layerInfo.Name;
+          const resolutionLimit = 5.29; // visible up to ~1:22,500 scale
+
+          const wmsLayerOptions = {
+            source: new ol.source.ImageWMS({
+              url: `http://localhost:8080/geoserver/${name}/wms`,
+              params: {
+                LAYERS: layerName,
+                FORMAT: "image/png",
+                TILED: false,
+                STYLES: name === "parcelws" ? "auto_label" : "",
+              },
+              serverType: "geoserver",
+              crossOrigin: "anonymous",
+            }),
+            visible: true,
+            zIndex: 10 + i,
+          };
+
+          if (name === "parcelws") {
+            wmsLayerOptions.maxResolution = resolutionLimit;
+          }
+
+          const wmsLayer = new ol.layer.Image(wmsLayerOptions);
+          map.addLayer(wmsLayer);
+          workspaceWrappers[name].layers.push(wmsLayer);
+        });
+
+        // Hook up checkbox event (after fetch ensures layers exist)
+        workspaceWrappers[name].checkbox.addEventListener("change", () => {
+          const visible = workspaceWrappers[name].checkbox.checked;
+          workspaceWrappers[name].layers.forEach((layer) =>
+            layer.setVisible(visible)
+          );
+        });
+      })
+      .catch((err) =>
+        console.error(
+          `Failed to load WMS layers from workspace '${name}':`,
+          err
+        )
+      );
   });
 
+  // ======= Hidden WFS vector layer for interaction =======
+  const geojsonLayers = [];
+  const snappingSources = [];
+
+  const parcelWfsSource = new ol.source.Vector({
+    format: new ol.format.GeoJSON(),
+    url: `http://localhost:8080/geoserver/parcelws/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=parcelws:v_02140503&outputFormat=application/json&srsname=EPSG:3857`,
+    strategy: ol.loadingstrategy.all,
+  });
+
+  const parcelVectorLayer = new ol.layer.Vector({
+    source: parcelWfsSource,
+    style: new ol.style.Style({
+      stroke: new ol.style.Stroke({ color: "#FF0000", width: 2 }),
+      fill: new ol.style.Fill({ color: "rgba(255, 0, 0, 0.05)" }),
+    }),
+    visible: false, // keep hidden, only for tools
+  });
+
+  map.addLayer(parcelVectorLayer);
+  geojsonLayers.push(parcelVectorLayer);
+  snappingSources.push(parcelWfsSource);
+
   // ======= Select Parcel Tool =======
+  // === Declare selection-related containers ===
+  const parcelSelectLayers = [];
   const selectionLayer = new ol.layer.Vector({
     source: new ol.source.Vector(),
     style: new ol.style.Style({
       stroke: new ol.style.Stroke({ color: "yellow", width: 4 }),
-      fill: new ol.style.Fill({ color: "rgba(0,0,0,0)" }),
+      fill: new ol.style.Fill({ color: "rgba(255, 255, 0, 0.2)" }),
     }),
   });
   selectionLayer.setZIndex(99);
   map.addLayer(selectionLayer);
 
-  const select = new ol.interaction.Select({
-    layers: geojsonLayers,
-    style: (feature) => {
-      const idParcel = feature.get("ID_Parcel");
-      return new ol.style.Style({
-        stroke: new ol.style.Stroke({ color: "yellow", width: 4 }),
-        fill: new ol.style.Fill({ color: "rgba(0,0,0,0)" }),
-        text: idParcel
-          ? new ol.style.Text({
-              font: "12px Calibri,sans-serif",
-              fill: new ol.style.Fill({ color: "#000" }),
-              stroke: new ol.style.Stroke({ color: "#fff", width: 3 }),
-              text: String(idParcel),
-              overflow: true,
-            })
-          : undefined,
-      });
-    },
-  });
-  select.setActive(false);
-  map.addInteraction(select);
+  // === Load all WFS layers from parcelws ===
+  fetch(
+    "http://localhost:8080/geoserver/parcelws/ows?service=WFS&version=1.0.0&request=GetCapabilities"
+  )
+    .then((res) => res.text())
+    .then((xmlText) => {
+      const parser = new DOMParser();
+      const xml = parser.parseFromString(xmlText, "text/xml");
+      const featureTypes = xml.getElementsByTagName("FeatureType");
 
-  function showParcelInfo(feature) {
-    const infoList = document.getElementById("feature-info-list");
-    infoList.innerHTML = "";
-    const props = feature.getProperties();
-    for (const key in props) {
-      if (key !== "geometry") {
-        const li = document.createElement("li");
-        li.innerHTML = `<strong>${key}:</strong> ${props[key]}`;
-        infoList.appendChild(li);
+      for (let i = 0; i < featureTypes.length; i++) {
+        const name =
+          featureTypes[i].getElementsByTagName("Name")[0].textContent;
+
+        const vectorSource = new ol.source.Vector({
+          format: new ol.format.GeoJSON(),
+          url: (extent) =>
+            `http://localhost:8080/geoserver/parcelws/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=${name}&outputFormat=application/json&srsname=EPSG:3857&bbox=${extent.join(
+              ","
+            )},EPSG:3857`,
+          strategy: ol.loadingstrategy.bbox,
+        });
+
+        const vectorLayer = new ol.layer.Vector({
+          source: vectorSource,
+          style: function (feature) {
+            const label = feature.get("id_parcel") || "";
+            return new ol.style.Style({
+              stroke: new ol.style.Stroke({ color: "black", width: 1 }),
+              fill: new ol.style.Fill({ color: "rgba(0, 0, 0, 0)" }),
+              text: new ol.style.Text({
+                font: "12px sans-serif",
+                text: label.toString(),
+                fill: new ol.style.Fill({ color: "#000" }),
+                stroke: new ol.style.Stroke({ color: "#fff", width: 2 }),
+              }),
+            });
+          },
+          visible: true,
+        });
+
+        map.addLayer(vectorLayer);
+        parcelSelectLayers.push(vectorLayer);
+        snappingSources.push(vectorSource);
       }
-    }
-    infoBox.classList.remove("hidden");
-  }
+    });
 
+  // === Select Interaction restricted to parcelws WFS layers ===
+  const select = new ol.interaction.Select({
+    layers: (layer) => parcelSelectLayers.includes(layer),
+  });
+  map.addInteraction(select);
+  select.setActive(false);
+
+  // === Toggle select tool button ===
+  document.getElementById("select-tool-btn").addEventListener("click", () => {
+    const isActive = select.getActive();
+    select.setActive(!isActive);
+
+    const btn = document.getElementById("select-tool-btn");
+    btn.textContent = isActive ? "Select" : "Disable Selection";
+
+    if (!isActive) {
+      popupOverlay.setPosition(undefined);
+      selectionLayer.getSource().clear();
+    }
+  });
+
+  // === On feature select, show popup + highlight ===
   select.on("select", (e) => {
     selectionLayer.getSource().clear();
-    const selected = e.selected;
-    if (selected.length > 0) {
-      selectionLayer.getSource().addFeature(selected[0].clone());
-      showParcelInfo(selected[0]);
-    } else {
-      infoBox.classList.add("hidden");
-    }
-  });
+    const feature = e.selected[0];
 
+<<<<<<< HEAD
   document.getElementById("select-tool-btn").addEventListener("click", () => {
     select.setActive(!select.getActive());
     if (select.getActive()) {
@@ -317,34 +382,120 @@ function init() {
       // infoBox.classList.add("hidden");
       layerPopup.classList.add("hidden");
       basemapPopup.classList.add("hidden");
+=======
+    if (feature) {
+      const geometry = feature.getGeometry();
+      const properties = feature.getProperties();
+      delete properties.geometry;
+
+      // Populate sidebar info
+      const infoList = document.getElementById("feature-info-list");
+      infoList.innerHTML = ""; // Clear old data
+
+      for (const key in properties) {
+        const li = document.createElement("li");
+        li.innerHTML = `<strong>${key}</strong>: ${properties[key]}`;
+        infoList.appendChild(li);
+      }
+
+      // Show sidebar panel
+      document.getElementById("feature-info").classList.remove("hidden");
+
+      // Highlight on map
+      selectionLayer.getSource().addFeature(feature.clone());
+    } else {
+      document.getElementById("feature-info").classList.add("hidden");
+>>>>>>> f76d4a0 (add new code)
     }
   });
 
   // ======= Search Parcel Tool =======
-  document.getElementById("search-btn-inner").addEventListener("click", () => {
-    const val = document.getElementById("parcel-search-input").value.trim();
-    if (!val) {
-      alert("Please enter an ID_Parcel.");
+
+  CQL_FILTER = id_parcel = "${parcelID}";
+
+  const projection = ol.proj.get("EPSG:3857"); // place this once globally in init()
+
+  document.getElementById("parcelSearchBtn").addEventListener("click", () => {
+    const parcelID = document.getElementById("parcelSearchInput").value.trim();
+    if (!parcelID) {
+      alert("Please enter a Parcel ID.");
       return;
     }
-    let found = null;
-    for (const layer of geojsonLayers) {
-      const features = layer.getSource().getFeatures();
-      found = features.find((f) => String(f.get("ID_Parcel")) === val);
-      if (found) break;
-    }
-    if (found) {
-      map.getView().fit(found.getGeometry().getExtent(), {
-        duration: 1000,
-        padding: [50, 50, 50, 50],
+
+    const capabilitiesUrl = `http://localhost:8080/geoserver/parcelws/ows?service=WFS&version=1.0.0&request=GetCapabilities`;
+
+    fetch(capabilitiesUrl)
+      .then((res) => res.text())
+      .then((xmlText) => {
+        const parser = new DOMParser();
+        const xml = parser.parseFromString(xmlText, "text/xml");
+        const featureTypes = xml.getElementsByTagName("FeatureType");
+        const layerNames = [];
+
+        for (let i = 0; i < featureTypes.length; i++) {
+          const name =
+            featureTypes[i].getElementsByTagName("Name")[0].textContent;
+          layerNames.push(name);
+        }
+
+        let found = false;
+        const promises = layerNames.map((name) => {
+          const cqlFilter = `id_parcel='${parcelID}'`;
+          const url = `http://localhost:8080/geoserver/parcelws/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=${name}&outputFormat=application/json&srsname=EPSG:3857&CQL_FILTER=${encodeURIComponent(
+            cqlFilter
+          )}`;
+
+          return fetch(url)
+            .then((res) => res.json())
+            .then((geojson) => {
+              const features = new ol.format.GeoJSON().readFeatures(geojson, {
+                featureProjection: projection,
+              });
+
+              if (features.length > 0) {
+                found = true;
+                const feature = features[0];
+                const geometry = feature.getGeometry();
+
+                // Clear selection and set new
+                selectionLayer.getSource().clear();
+                selectionLayer.getSource().addFeature(feature);
+
+                // Show info in sidebar
+                const properties = feature.getProperties();
+                delete properties.geometry;
+                const infoList = document.getElementById("feature-info-list");
+                infoList.innerHTML = "";
+                for (const key in properties) {
+                  const li = document.createElement("li");
+                  li.innerHTML = `<strong>${key}</strong>: ${properties[key]}`;
+                  infoList.appendChild(li);
+                }
+                document
+                  .getElementById("feature-info")
+                  .classList.remove("hidden");
+
+                // Zoom to feature extent
+                map.getView().fit(geometry.getExtent(), {
+                  padding: [20, 20, 20, 20],
+                  duration: 800,
+                });
+              }
+            });
+        });
+
+        Promise.all(promises).then(() => {
+          if (!found) {
+            alert("Parcel not found in any layer.");
+            selectionLayer.getSource().clear();
+            document.getElementById("feature-info").classList.add("hidden");
+          }
+        });
+      })
+      .catch((err) => {
+        console.error("Search error:", err);
+        alert("Error searching across layers.");
       });
-      selectionLayer.getSource().clear();
-      selectionLayer.getSource().addFeature(found.clone());
-      showParcelInfo(found);
-      searchBox.classList.add("hidden");
-    } else {
-      alert(`No parcel found with ID_Parcel = "${val}"`);
-    }
   });
 
   // ======= Measure Tool =======
@@ -356,19 +507,88 @@ function init() {
   const measureSource = new ol.source.Vector();
   const measureLayer = new ol.layer.Vector({
     source: measureSource,
-    style: new ol.style.Style({
-      fill: new ol.style.Fill({ color: "rgba(255, 255, 255, 0.4)" }),
-      stroke: new ol.style.Stroke({ color: "#ffcc33", width: 2 }),
-      image: new ol.style.Circle({
-        radius: 7,
-        fill: new ol.style.Fill({ color: "#ffcc33" }),
-      }),
-    }),
+    style: function (feature) {
+      const geom = feature.getGeometry();
+      let text = "";
+      const unit = document.getElementById("unit-select")?.value || "meters";
+
+      if (geom instanceof ol.geom.LineString) {
+        text = formatLength(geom, unit);
+      } else if (geom instanceof ol.geom.Polygon) {
+        text = formatArea(geom, unit);
+      }
+
+      const styles = [
+        // Style for geometry shape (polygon or line)
+        new ol.style.Style({
+          stroke: new ol.style.Stroke({ color: "#ffcc33", width: 2 }),
+          fill: new ol.style.Fill({ color: "rgba(255, 255, 255, 0.4)" }),
+          image: new ol.style.Circle({
+            radius: 7,
+            fill: new ol.style.Fill({ color: "#ffcc33" }),
+          }),
+        }),
+      ];
+
+      // Add label as separate style, positioned at interior point (for polygon)
+      if (text) {
+        styles.push(
+          new ol.style.Style({
+            text: new ol.style.Text({
+              text: text,
+              font: "14px sans-serif",
+              fill: new ol.style.Fill({ color: "#000" }),
+              stroke: new ol.style.Stroke({ color: "#fff", width: 3 }),
+              overflow: true,
+              textAlign: "center",
+              placement: "point",
+            }),
+            geometry:
+              geom instanceof ol.geom.Polygon ? geom.getInteriorPoint() : geom, // for lines, keep as-is
+          })
+        );
+      }
+
+      return styles;
+    },
   });
+  measureLayer.setZIndex(200);
   map.addLayer(measureLayer);
 
+  // --- Format helpers ---
+  function formatLength(line, unit) {
+    const length = ol.sphere.getLength(line);
+    switch (unit) {
+      case "kilometers":
+        return (length / 1000).toFixed(3) + " km";
+      case "feet":
+        return (length * 3.28084).toFixed(2) + " ft";
+      case "miles":
+        return (length * 0.000621371).toFixed(4) + " mi";
+      case "meters":
+      default:
+        return length.toFixed(2) + " m";
+    }
+  }
+
+  function formatArea(polygon, unit) {
+    const area = ol.sphere.getArea(polygon);
+    switch (unit) {
+      case "kilometers":
+        return (area / 1e6).toFixed(3) + " km²";
+      case "feet":
+        return (area * 10.7639).toFixed(2) + " ft²";
+      case "acres":
+        return (area * 0.000247105).toFixed(4) + " acres";
+      case "meters":
+      default:
+        return area.toFixed(2) + " m²";
+    }
+  }
+
+  // --- Clear all measure drawings ---
   function clearMeasurement() {
-    measureSource.clear();
+    measureSource.clear(); // ✅ only clear on user action
     if (draw) {
       map.removeInteraction(draw);
       draw = null;
@@ -378,6 +598,7 @@ function init() {
     document.getElementById("measure-result").innerHTML = "";
   }
 
+<<<<<<< HEAD
   function formatLength(line, unit) {
     const length = ol.sphere.getLength(line);
     if (unit === "kilometers") return (length / 1000).toFixed(3) + " km";
@@ -394,20 +615,35 @@ function init() {
     return area.toFixed(2) + " m²";
   }
 
+=======
+  // --- Add drawing interaction ---
+>>>>>>> f76d4a0 (add new code)
   function addDrawInteraction() {
-    clearMeasurement();
+    // Don't clear previous features
+    if (draw) {
+      map.removeInteraction(draw);
+      draw = null;
+    }
+    snaps.forEach((snap) => map.removeInteraction(snap));
+    snaps = [];
+
     let type =
       [...document.getElementsByName("measure-type")].find((r) => r.checked)
         ?.value || "length";
     type = type === "area" ? "Polygon" : "LineString";
+
     draw = new ol.interaction.Draw({
       source: measureSource,
       type: type,
     });
     map.addInteraction(draw);
 
+<<<<<<< HEAD
     // Snapping: to all loaded geojson sources
     snaps = [];
+=======
+    // Reapply snapping
+>>>>>>> f76d4a0 (add new code)
     if (typeof snappingSources !== "undefined") {
       snappingSources.forEach((source) => {
         const snap = new ol.interaction.Snap({ source });
@@ -416,25 +652,35 @@ function init() {
       });
     }
 
-    draw.on("drawend", (e) => {
+    // Draw end handler: show result and label
+    draw.on("drawend", function (e) {
       const geom = e.feature.getGeometry();
-      const unit = document.getElementById("unit-select").value;
+      const unit = document.getElementById("unit-select")?.value || "meters";
       const result =
-        geom.getType() === "LineString"
+        geom instanceof ol.geom.LineString
           ? formatLength(geom, unit)
           : formatArea(geom, unit);
+
       document.getElementById("measure-result").innerHTML = "Result: " + result;
+      measureSource.changed(); // refresh style for label
     });
   }
 
+<<<<<<< HEAD
   // Measure Tool Toggle Button
+=======
+  // --- Toggle measure tool button ---
+>>>>>>> f76d4a0 (add new code)
   document.getElementById("measure-tool-btn").addEventListener("click", () => {
     measureActive = !measureActive;
     if (measureActive) {
       addDrawInteraction();
       measurePopup.classList.remove("hidden");
       searchBox.classList.add("hidden");
+<<<<<<< HEAD
       // infoBox.classList.add("hidden");
+=======
+>>>>>>> f76d4a0 (add new code)
       layerPopup.classList.add("hidden");
       basemapPopup.classList.add("hidden");
     } else {
@@ -443,6 +689,7 @@ function init() {
     }
   });
 
+<<<<<<< HEAD
   // Only update draw interaction if tool is active
   document.getElementsByName("measure-type").forEach((r) => {
     r.addEventListener("change", () => {
@@ -453,6 +700,19 @@ function init() {
     if (measureActive) addDrawInteraction();
   });
 
+=======
+  // --- Change listeners for unit + type ---
+  document.getElementsByName("measure-type").forEach((r) => {
+    r.addEventListener("change", () => {
+      if (measureActive) addDrawInteraction(); // restart interaction
+    });
+  });
+  document.getElementById("unit-select").addEventListener("change", () => {
+    measureSource.changed(); // refresh label on all
+  });
+
+  // --- Clear measure button ---
+>>>>>>> f76d4a0 (add new code)
   document
     .getElementById("clear-measure-btn")
     .addEventListener("click", clearMeasurement);

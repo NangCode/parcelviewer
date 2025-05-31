@@ -25,6 +25,8 @@
           <button id="parcel-search-btn" title="Search parcel">Search</button>
           <button id="measure-tool-btn" title="Measure">Tools</button>
           <button id="select-tool-btn" title="Select parcel">Select</button>
+          <!-- <button id="selectBtn">Select Parcel</button> -->
+
           <button id="clear-all-btn" title="Clear All">Clear All</button>
         </div>
         <button id="help-btn">Help</button>
@@ -64,6 +66,7 @@
     <div id="search-box" class="search-popup hidden">
       <!-- Parcel ID Search -->
       <div class="search-section">
+<<<<<<< HEAD
         <label for="parcel-search-input" class="search-label"
           >Search Parcel by ID_Parcel:</label
         >
@@ -73,6 +76,14 @@
           placeholder="Enter ID_Parcel"
         />
         <button id="search-btn-inner">Search Parcel ID</button>
+=======
+        <input
+          type="text"
+          id="parcelSearchInput"
+          placeholder="Enter Parcel ID"
+        />
+        <button id="parcelSearchBtn">Search Parcel ID</button>
+>>>>>>> f76d4a0 (add new code)
       </div>
       <hr class="search-divider" />
       <!-- Place Search -->
@@ -109,12 +120,13 @@
       <div>
         <label for="unit-select">Unit:</label>
         <select id="unit-select">
-          <option value="meters">Meters</option>
+          <option value="meters" selected>Meters</option>
           <option value="kilometers">Kilometers</option>
           <option value="feet">Feet</option>
           <option value="miles">Miles</option>
         </select>
       </div>
+
       <button id="clear-measure-btn">Clear Measurement</button>
       <div id="measure-result"></div>
       <hr class="tool-divider" />
