@@ -247,82 +247,84 @@ function init() {
     }
   });
 
-  // ======= Select Tool =======
-  // -- Remove your old selectionLayer entirely --
-
-  // create a Select interaction that targets only your parcelLayer
-  const select = new ol.interaction.Select({
-    layers: (layer) => layer === parcelLayer,
-    style: function (feature, resolution) {
-      // 1) the yellow highlight halo
-      const halo = new ol.style.Style({
-        stroke: new ol.style.Stroke({ color: "#FFFF00", width: 4 }),
-        fill: new ol.style.Fill({
-          // semi-transparent yellow
-          color: "rgba(255,255,0,0.2)",
-        }),
-      });
-
-      // 2) re-apply your parcel label + outline style so the label stays on top
-      const id = feature.get("id_parcel");
-      const parcelStyle = new ol.style.Style({
-        stroke: new ol.style.Stroke({ color: "#4682B4", width: 1.5 }),
-        fill: new ol.style.Fill({ color: "rgba(255,255,255,0)" }),
-        text:
-          id != null && resolution <= LABEL_RESOLUTION_THRESHOLD
-            ? new ol.style.Text({
-                text: id.toString(),
-                font: "bold 10px Arial",
-                fill: new ol.style.Fill({ color: "#000" }),
-                stroke: new ol.style.Stroke({ color: "#fff", width: 1 }),
-                overflow: false,
-                placement: "point",
-              })
-            : null,
-      });
-
-      // return both styles: first the halo, then the feature’s own style
-      return [halo, parcelStyle];
-    },
+  // 1) Create one shared “highlight” layer for both search & click-to-select:
+  const selectionLayer = new ol.layer.Vector({
+    source: new ol.source.Vector(),
+    style: new ol.style.Style({
+      stroke: new ol.style.Stroke({ color: "yellow", width: 4 }),
+      fill: new ol.style.Fill({ color: "rgba(255,255,0,0.2)" }),
+    }),
   });
+  selectionLayer.setZIndex(99);
+  map.addLayer(selectionLayer);
 
-  map.addInteraction(select);
-  select.setActive(false);
-
-  // wire up your button
-  document.getElementById("select-tool-btn").addEventListener("click", () => {
-    const active = select.getActive();
-    select.setActive(!active);
-    document.getElementById("select-tool-btn").textContent = active
-      ? "Select"
-      : "Disable Selection";
-    if (active) {
-      // clearing selection when toggling off
-      select.getFeatures().clear();
-      infoBox.classList.add("hidden");
-    }
+  // 2) Make your Select interaction draw *into* that layer, not its own default overlay:
+  const selectInteraction = new ol.interaction.Select({
+    layers: (layer) => layer === parcelLayer, // only pick parcels
+    hitTolerance: 5,
+    style: null, // → use `selectionLayer`’s style
   });
+  map.addInteraction(selectInteraction);
+  selectInteraction.setActive(false);
 
-  select.on("select", (e) => {
-    const feature = e.selected[0];
-    const list = document.getElementById("feature-info-list");
-    list.innerHTML = "";
+  // 3) When a feature is selected, clone it into `selectionLayer` and show its props:
+  selectInteraction.on("select", (e) => {
+    const src = selectionLayer.getSource();
+    src.clear();
 
-    if (feature) {
+    if (e.selected.length) {
+      const feature = e.selected[0];
+      // highlight it
+      src.addFeature(feature.clone());
+
+      // populate sidebar
+      const infoBox = document.getElementById("feature-info");
+      const list = document.getElementById("feature-info-list");
+      list.innerHTML = "";
       const props = { ...feature.getProperties() };
       delete props.geometry;
-
-      Object.entries(props).forEach(([key, val]) => {
-        if (key === "Shape_leng" || key === "Shape_area") return;
+      Object.entries(props).forEach(([k, v]) => {
+        if (k === "Shape_leng" || k === "Shape_area") return;
         const li = document.createElement("li");
-        li.innerHTML = `<strong>${key}</strong>: ${val}`;
+        li.innerHTML = `<strong>${k}</strong>: ${v}`;
         list.appendChild(li);
       });
-
       infoBox.classList.remove("hidden");
     } else {
-      infoBox.classList.add("hidden");
+      // nothing selected → hide sidebar
+      document.getElementById("feature-info").classList.add("hidden");
     }
+  });
+
+  // 4) Wire your “Select” button to toggle this interaction:
+  document.getElementById("select-tool-btn").addEventListener("click", () => {
+    const on = !selectInteraction.getActive();
+    selectInteraction.setActive(on);
+    document.getElementById("select-tool-btn").textContent = on
+      ? "Disable Selection"
+      : "Select";
+
+    if (!on) {
+      // turning it off: clear highlight & hide sidebar
+      selectionLayer.getSource().clear();
+      document.getElementById("feature-info").classList.add("hidden");
+    }
+  });
+
+  // 5) And finally, in your Clear-All, clear that same layer and reset the input
+  document.getElementById("clear-all-btn").addEventListener("click", () => {
+    // … your other clear logic …
+
+    // clear parcel highlight
+    select.getFeatures().clear();
+    selectionLayer.getSource().clear();
+    select.setActive(false);
+    document.getElementById("select-tool-btn").textContent = "Select";
+
+    // clear sidebar & search input
+    document.getElementById("feature-info-list").innerHTML = "";
+    infoBox.classList.add("hidden");
+    document.getElementById("parcelSearchInput").value = ""; // note camelCase ID
   });
 
   // ======= Search Tool =======
@@ -336,35 +338,36 @@ function init() {
       return;
     }
 
-    // look up in the same source the layer is using
+    // Pull from the same source you added your GeoJSON to:
     const features = parcelSource.getFeatures();
     const match = features.find((f) => `${f.get("id_parcel")}` === id);
 
     if (!match) {
       alert(`Parcel ID "${id}" not found.`);
-      selectionLayer.getSource().clear();
+      select.getFeatures().clear();
       infoBox.classList.add("hidden");
       return;
     }
 
-    // highlight it
+    // Highlight it
     const selSrc = selectionLayer.getSource();
     selSrc.clear();
     selSrc.addFeature(match.clone());
 
-    // fill the sidebar
-    const infoList = document.getElementById("feature-info-list");
-    infoList.innerHTML = "";
+    // Populate sidebar (hiding Shape_leng / Shape_area if you want)
+    const list = document.getElementById("feature-info-list");
+    list.innerHTML = "";
     const props = { ...match.getProperties() };
     delete props.geometry;
     Object.entries(props).forEach(([k, v]) => {
+      if (k === "Shape_leng" || k === "Shape_area") return;
       const li = document.createElement("li");
       li.innerHTML = `<strong>${k}</strong>: ${v}`;
-      infoList.appendChild(li);
+      list.appendChild(li);
     });
     infoBox.classList.remove("hidden");
 
-    // zoom to it
+    // Zoom to it
     map.getView().fit(match.getGeometry().getExtent(), {
       padding: [20, 20, 20, 20],
       duration: 800,
@@ -610,10 +613,11 @@ function init() {
     }
     document.getElementById("google-places-result").innerHTML = "";
 
-    // 5) Clear parcel selection & disable select tool
-    select.getFeatures().clear();
+    // 5) Clear parcel highlight & disable select tool
+    //    (use selectInteraction, not the old `select`)
     selectionLayer.getSource().clear();
-    select.setActive(false);
+    selectInteraction.getFeatures().clear();
+    selectInteraction.setActive(false);
     document.getElementById("select-tool-btn").textContent = "Select";
 
     // 6) Hide all popup panels
@@ -625,8 +629,8 @@ function init() {
     // 7) Clear sidebar info
     document.getElementById("feature-info-list").innerHTML = "";
 
-    // 8) Reset search inputs
-    document.getElementById("parcel-search-input").value = "";
+    // 8) Reset search inputs (note the exact IDs!)
+    document.getElementById("parcelSearchInput").value = "";
     document.getElementById("google-place-input").value = "";
 
     // 9) Hide share-pin link if visible
