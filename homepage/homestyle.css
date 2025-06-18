@@ -65,16 +65,53 @@ section {
   border-radius: 0%;
   margin-right: 10px;
 }
+html {
+  scroll-padding-top: 120px;
+}
 
 .ghome {
-  font-size: 14px;
+  position: fixed;
+  top: 20px;
+  right: 40px;
+  display: flex;
+  gap: 12px;
+  z-index: 1000;
 }
 
 .ghome a {
-  text-decoration: none;
-  margin-left: 20px;
-  color: #000;
+  font-family: "Kantumruy Pro", sans-serif;
+  font-size: 14px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  color: #222;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 8px 14px;
+  border-radius: 8px;
   font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  text-decoration: none;
+  display: inline-block;
+}
+
+.ghome a:hover {
+  background: rgba(255, 255, 255, 0.9);
+  transform: scale(1.05);
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 120px; /* matches nav height */
+}
+
+.profile {
+  padding-top: 40px; /* natural padding */
+  margin-top: 0; /* no pull-up tricks */
+}
+
+.my-profile {
+  margin-top: 0; /* no forced spacing */
 }
 
 .content {
@@ -112,7 +149,7 @@ section {
 }
 
 .button-container {
-  margin-top: 5rem;
+  /* margin-top: 5rem; */
   margin-left: 200px;
   display: inline-block;
   background: rgba(41, 63, 146, 0.7);
@@ -179,8 +216,8 @@ section {
 /* profile */
 
 .profile {
-  min-height: 100vh; /* Always at least full screen */
-  height: auto; /* But can grow with content */
+  min-height: 100vh;
+  padding: 140px 40px 40px 40px; /* Add top padding here */
   background: linear-gradient(
       to right,
       #496a9a 0%,
@@ -190,9 +227,9 @@ section {
     url("contourback.png") no-repeat center center/cover;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start; /* changed from space-between */
-  padding: 20px 40px;
+  justify-content: flex-start;
 }
+
 @media (max-width: 600px) {
   .profile {
     padding: 8px 2vw;
