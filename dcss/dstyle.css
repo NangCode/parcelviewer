@@ -118,7 +118,8 @@ a.button:hover {
   position: fixed !important;
   min-width: 240px;
   width: 260px;
-  min-height: 140px;
+  max-height: 50vh; /* 👈 Limit popup height to 80% of viewport */
+  overflow-y: auto; /* 👈 Enable vertical scroll */
   background: rgba(255, 255, 255, 0.95);
   border: 1.5px solid #2c3eeb;
   border-radius: 10px;
@@ -131,6 +132,7 @@ a.button:hover {
   gap: 8px;
   backdrop-filter: blur(6px);
 }
+
 .popup strong,
 .popup h3 {
   font-size: 18px;
@@ -506,3 +508,120 @@ a.button:hover {
   border: 1px solid #ccc;
   min-width: 200px;
 } */
+/* ---------------------------------- */
+/* 📱 Responsive Enhancements */
+/* ---------------------------------- */
+
+/* Base adjustment for widths */
+html,
+body {
+  width: 100%;
+  overflow-x: hidden;
+}
+
+/* Responsive layout for header and nav */
+@media (max-width: 768px) {
+  .hero {
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding: 10px 15px;
+    height: auto;
+    gap: 10px;
+  }
+
+  .logo {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .nav-buttons {
+    flex-wrap: wrap;
+    justify-content: center;
+    width: 100%;
+    margin-top: 10px;
+    gap: 8px;
+  }
+
+  .tool-group {
+    flex-wrap: wrap;
+    justify-content: center;
+    width: 100%;
+    gap: 8px;
+  }
+
+  .button,
+  button {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+/* Scale popup boxes and enable better scrolling on smaller screens */
+.popup,
+.search-popup,
+.measure-popup {
+  width: clamp(240px, 90vw, 300px);
+  max-height: 75vh;
+  overflow-y: auto;
+}
+
+/* Adjust map control panel and tools for mobile */
+@media (max-width: 600px) {
+  .map-tools,
+  .map-controls {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  #mouse-position {
+    left: 10px;
+    bottom: 5px;
+    font-size: 10px;
+  }
+
+  #parcel-info-btn {
+    top: 100px;
+    left: 10px;
+    font-size: 13px;
+    padding: 6px 10px;
+  }
+
+  .info-box {
+    top: auto;
+    bottom: 80px;
+    left: 10px;
+    right: 10px;
+    max-width: 95vw;
+    width: auto;
+    font-size: 13px;
+  }
+
+  .modal-content {
+    width: 95vw;
+    padding: 1.2rem 1.5rem;
+  }
+}
+
+/* Improve feature list on smaller screens */
+@media (max-width: 480px) {
+  .info-box h3 {
+    font-size: 16px;
+  }
+
+  .info-box li {
+    font-size: 13px;
+  }
+
+  .search-label,
+  .kml-label {
+    font-size: 13px;
+  }
+
+  input,
+  select,
+  button {
+    font-size: 13px;
+  }
+}

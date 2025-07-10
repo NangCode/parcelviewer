@@ -478,14 +478,15 @@ function init() {
 
   document.getElementById("measure-tool-btn").addEventListener("click", () => {
     measureActive = !measureActive;
+
     if (measureActive) {
-      addDrawInteraction();
-      measurePopup.classList.remove("hidden");
+      measurePopup.classList.remove("hidden"); // show panel first
     } else {
       clearMeasurement();
       measurePopup.classList.add("hidden");
     }
   });
+
   document
     .getElementsByName("measure-type")
     .forEach((r) =>
@@ -637,8 +638,8 @@ function init() {
     document.getElementById("share-pin-link").classList.add("hidden");
 
     // 10) Restore map view to default center & zoom
-    map.getView().setCenter(ol.proj.fromLonLat([103.527339, 12.538695]));
-    map.getView().setZoom(16);
+    // map.getView().setCenter(ol.proj.fromLonLat([103.527339, 12.538695]));
+    // map.getView().setZoom(16);
   });
 
   // --- HELP Modal ---
