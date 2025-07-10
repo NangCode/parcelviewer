@@ -507,121 +507,53 @@ a.button:hover {
   border-radius: 10px;
   border: 1px solid #ccc;
   min-width: 200px;
-} */
-/* ---------------------------------- */
-/* 📱 Responsive Enhancements */
-/* ---------------------------------- */
-
-/* Base adjustment for widths */
-html,
-body {
-  width: 100%;
-  overflow-x: hidden;
-}
-
-/* Responsive layout for header and nav */
-@media (max-width: 768px) {
-  .hero {
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: flex-start;
-    padding: 10px 15px;
-    height: auto;
-    gap: 10px;
-  }
-
-  .logo {
-    justify-content: center;
-    width: 100%;
-  }
-
-  .nav-buttons {
-    flex-wrap: wrap;
-    justify-content: center;
-    width: 100%;
-    margin-top: 10px;
-    gap: 8px;
-  }
-
-  .tool-group {
-    flex-wrap: wrap;
-    justify-content: center;
-    width: 100%;
-    gap: 8px;
-  }
-
-  .button,
-  button {
-    width: 100%;
-    text-align: center;
-  }
-}
-
-/* Scale popup boxes and enable better scrolling on smaller screens */
+/* Responsive scaling for popups without shifting the interface */
 .popup,
-.search-popup,
-.measure-popup {
-  width: clamp(240px, 90vw, 300px);
-  max-height: 75vh;
+.measure-popup,
+.search-popup {
+  max-width: 90vw;
+  max-height: 80vh;
+  width: clamp(240px, 85vw, 320px); /* adjust width for smaller viewports */
   overflow-y: auto;
+  font-size: 0.95rem;
 }
 
-/* Adjust map control panel and tools for mobile */
-@media (max-width: 600px) {
-  .map-tools,
-  .map-controls {
-    flex-direction: column;
-    align-items: flex-start;
+/* Make form elements and labels scale nicely */
+.popup input,
+.popup select,
+.popup button,
+.popup label {
+  font-size: 0.85rem;
+}
+
+/* Prevent zoom scaling and overflow on mobile */
+@media (max-width: 480px) {
+  body,
+  html {
+    touch-action: pan-x pan-y;
+    overscroll-behavior: contain;
+  }
+
+  .popup h3,
+  .popup strong {
+    font-size: 1rem;
+  }
+
+  .popup {
+    padding: 14px 16px;
     gap: 6px;
   }
 
-  #mouse-position {
-    left: 10px;
-    bottom: 5px;
-    font-size: 10px;
+  .popup button {
+    padding: 6px 12px;
   }
 
-  #parcel-info-btn {
-    top: 100px;
-    left: 10px;
-    font-size: 13px;
-    padding: 6px 10px;
+  .share-pin-link {
+    font-size: 0.8rem;
+    padding: 6px 8px;
   }
 
-  .info-box {
-    top: auto;
-    bottom: 80px;
-    left: 10px;
-    right: 10px;
-    max-width: 95vw;
-    width: auto;
-    font-size: 13px;
-  }
-
-  .modal-content {
-    width: 95vw;
-    padding: 1.2rem 1.5rem;
-  }
-}
-
-/* Improve feature list on smaller screens */
-@media (max-width: 480px) {
-  .info-box h3 {
-    font-size: 16px;
-  }
-
-  .info-box li {
-    font-size: 13px;
-  }
-
-  .search-label,
-  .kml-label {
-    font-size: 13px;
-  }
-
-  input,
-  select,
-  button {
-    font-size: 13px;
+  #kml-file-input {
+    font-size: 12px;
   }
 }
