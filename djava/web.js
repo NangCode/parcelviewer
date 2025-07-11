@@ -1,6 +1,11 @@
 window.onload = init;
+const hiddenKeys = ["Shape_leng", "Shape_area"];
 
 function init() {
+  const fieldLabels = {
+    id_parcel: "លេខក្បាលដី",
+  };
+
   // Projection
   const projection = ol.proj.get("EPSG:3857");
 
@@ -284,11 +289,14 @@ function init() {
       const props = { ...feature.getProperties() };
       delete props.geometry;
       Object.entries(props).forEach(([k, v]) => {
-        if (k === "Shape_leng" || k === "Shape_area") return;
+        if (hiddenKeys.includes(k)) return;
+
+        const label = fieldLabels[k] || k; // fallback to raw key
         const li = document.createElement("li");
-        li.innerHTML = `<strong>${k}</strong>: ${v}`;
+        li.innerHTML = `<strong>${label}</strong>: ${v}`;
         list.appendChild(li);
       });
+
       infoBox.classList.remove("hidden");
     } else {
       // nothing selected → hide sidebar
